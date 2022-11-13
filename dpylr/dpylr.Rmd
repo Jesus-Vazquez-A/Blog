@@ -1,0 +1,224 @@
+---
+title: "Introduction to Dpylr"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+Installing the tidyverse library, install all the essential packages R for example, the ggplot2 and dpylr.
+
+You can install install.packages('tidyverse')
+
+If you want to install dplyr independently, you can use the command: install.packages('dpylr')
+
+
+
+## *Select Features*
+
+
+```{r}
+df <- read.csv("Iris.csv")
+```
+
+```{r}
+df %>% summary()
+```
+
+The Id variable does not provide any relevant information, it is a better idea to remove it. The summary() function is useful for continuous data, since it shows various statistical measures, so it does not make any sense to use this function for character data.
+
+
+```{r}
+df <- df %>% select(-Id)
+```
+
+
+By assigning a "-" followed by the variable name, you can tell R that this variable is not selected.
+
+
+```{r}
+df %>% select_if(is.numeric) %>% head()
+```
+
+Using the select_if() function allows you to select variables that meet certain conditions, for example in this case that they are numerical.
+
+
+```{r}
+df %>% select_if(is.numeric) %>% summary()
+```
+
+
+We use the same function above with the difference of appending the summary() function, to show us statistical information for numerical variables.
+
+
+## *Group By*
+
+
+```{r}
+df %>% group_by(Species) %>% summarise(mean = mean(SepalLengthCm))
+```
+
+The group_by() function allows you to perform mathematical operations according to the categories of the established variable.
+
+We rely on the summarize() function to show a small summary, in this case showing us the average value of the length of the sepal, according to the iris species, generating a better idea of the behavior of the data.
+
+
+
+```{r}
+serie <- df %>% group_by(Species) %>% count() %>% ungroup() %>% mutate(percent=n/sum(n)*100)
+```
+
+```{r}
+serie %>% head()
+```
+
+
+We do something similar to the previous one in this case, showing us the sample percentage for each species of iris.
+
+
+We can go one step further, for example it is more friendly to present the same information but using a graph, for this we will use the ggplot2 library.
+
+If you downloaded and important the tidyverse library, you don't need to import the ggplot2 library separately.
+
+
+
+
+```{r}
+colors=c('#77dd77','#fdfd96','#84b6f4','#fdcae1')
+```
+
+```{r}
+serie %>% ggplot(aes(x=Species,y=percent,fill=Species)) + 
+    geom_bar(stat = "identity",position = "dodge") +
+    geom_text(aes(label=paste0(round(percent),"%"))) +
+    theme_light() +
+    scale_fill_manual(values = colors) +
+    theme(legend.position = "none") +
+    labs(y = "Percent",title = "Iris Species Percent")
+```
+
+
+Using the ggplot2 library we can create beautiful graphs, to better represent the data.
+
+
+```{r}
+ggsave(filename = "percent_bar.jpg")
+```
+
+
+## *Filter Data*
+
+
+
+```{r}
+df %>% filter(SepalWidthCm > 1.5) %>% head()
+```
+
+We can filter() a set of data that meets the characteristic proposed by the user, in this case filter those data where the sepal width is greater than 1.5 cm.
+
+
+```{r}
+df %>% filter(SepalWidthCm > 1.5,Species == 'Iris-virginica') %>% head()
+```
+
+To use the logical AND operator, you can use the comma for example, select those data where the thickness of the sepal is greater than 1.6 and the iris species is of the virginica type
+
+
+## *Modification of Variables and Creation of new Characteristics.*
+
+Thanks to the mutate() function we can make modifications to the data frame, it is really useful to create new variables that add value and provide statistical power to the model.
+
+
+
+```{r}
+df <- read.csv("weight-height.csv")
+```
+
+
+
+```{r}
+
+df %>% mutate(BMI = 703 * Weight / Height ^ 2 ) %>%  select(BMI) %>% head()
+```
+
+We create a new variable that refers to the BMI of each individual.
+
+
+
+```{r}
+df<- df %>% 
+
+    mutate(Weight = Weight/2.2046,Height = Height / 39.37) %>% 
+    mutate(Weight = round(Weight,2),Height = round(Height,2))
+```
+
+
+```{r}
+df %>% select(Weight,Height) %>% head()
+```
+
+We make modifications to the Weight and Height variables, the first variable is converted to kilos and the second to the unit of meters.
+
+
+```{r}
+df %>% rename(Weight_Kg = Weight,Height_Mts = Height)   %>% head()
+```
+
+We rename each variable, to make it more understandable since we previously carried out a transformation.
+
+
+
+
+```{r}
+df <- read.csv("Amazon.csv")
+```
+
+
+
+```{r}
+df <- df %>% mutate(Date = as.Date(Date)) %>% select(Date)
+```
+
+
+We transform the variable to date format.
+
+
+```{r}
+df %>% head()
+```
+
+```{r}
+df<- df %>% separate(Date,c('Year','Month','Day'))
+```
+
+
+From the Date variable we can extract the year, month and day, this is really useful when creating a time series model.
+
+
+```{r}
+df %>% summary()
+```
+
+
+At the moment the variables that we create are marked as character type, for which we will have to perform the transformation to a numeric type.
+
+
+
+```{r}
+df <- df %>% mutate(Year = as.numeric(Year),Month = as.numeric(Month),Day = as.numeric(Day)) 
+```
+
+
+
+
+```{r}
+df %>% str()
+```
+
+We check the changes
+
